@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <canvas id="mainCanvas"></canvas>
+    <script src="main.js"></script>
+    <script>
+
+        const FirstPlanner = new Planner();
+
+        FirstPlanner.init("mainCanvas");
+        Planner.packDefBlockList(FirstPlanner.blockList);
+
+        FirstPlanner.blockList[Planner.uid(10)] = {
+            width: 200,
+            height: 50,
+            level: 10,
+            type: "rect",
+            bgcolor: Planner.getRandomColor(),
+            x: 100,
+            y: 10,
+            selected: false,
+            highlighted: false,
+        };
+
+        FirstPlanner.blockList[Planner.uid(11)] = {
+            width: 50,
+            height: 200,
+            level: 11,
+            type: "rect",
+            bgcolor: Planner.getRandomColor(),
+            x: 120,
+            y: 100,
+            selected: false,
+            highlighted: false,
+        };
+
+        FirstPlanner.blockListArr = Object.entries(FirstPlanner.blockList).sort();
+
+        FirstPlanner.drawOn();
+
+        window.addEventListener("resize", () => {
+            FirstPlanner.setCSize();
+            drawOnDebounce();
+        });
+
+        const canvas = document.getElementById("mainCanvas");
+
+        const drawOnDebounce = FirstPlanner.debounce(function () {
+            FirstPlanner.drawOn();
+        }, 80);
+
+        const moveThrottled = FirstPlanner.throttle(() => {
+            FirstPlanner.drawOn();
+        }, 5);
+
+        canvas.addEventListener("mousemove", (event) => {
+            FirstPlanner.highlight(FirstPlanner.blockList, FirstPlanner.detectBlockArr());
+            FirstPlanner.detectApproach();
+            if (FirstPlanner.mousedown === false) {
+                FirstPlanner.select(
+                    FirstPlanner.detectArr(event.clientX, event.clientY)[0]
+                );
+            }
+            FirstPlanner.moveSelected(event.clientX, event.clientY);
+            moveThrottled();
+        });
+
+        canvas.addEventListener("mousedown", (event) => {
+            FirstPlanner.mousedown = true;
+            FirstPlanner.translate = {
+                x: event.clientX - FirstPlanner.selected.x,
+                y: event.clientY - FirstPlanner.selected.y,
+            };
+            FirstPlanner.startPos = {
+                x: FirstPlanner.selected.x,
+                y: FirstPlanner.selected.y,
+            };
+        });
+
+        canvas.addEventListener("mouseup", (event) => {
+            const intersected = FirstPlanner.detectBlockArr();
+            FirstPlanner.mousedown = false;
+            if (intersected.length > 0) {
+                FirstPlanner.selected.x = FirstPlanner.startPos.x;
+                FirstPlanner.selected.y = FirstPlanner.startPos.y;
+                FirstPlanner.drawOn();
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>
